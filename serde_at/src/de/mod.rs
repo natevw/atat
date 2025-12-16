@@ -927,6 +927,28 @@ mod tests {
     }
 
     #[test]
+    fn unquoted_string_fields() {
+        // like `SecurityData` from "+USECMNG=3" in ublox-cellular-rs
+        #[derive(Clone, Debug, Deserialize, PartialEq)]
+        pub struct SecurityData {
+            cert_type: String<2>,
+            internal_name: String<200>,
+            common_name: Option<String<100>>,
+            expiration_date: Option<String<100>>,
+        }
+
+        assert_eq!(
+            crate::from_str("CA,\"MyRootCA\",\"IssuerRootCA\",\"2022/05/21 04:00:00\""),
+            Ok(SecurityData {
+                cert_type: String::try_from("CA").unwrap(),
+                internal_name: String::try_from("MyRootCA").unwrap(),
+                common_name: String::try_from("IssuerRootCA").ok(),
+                expiration_date: String::try_from("2022/05/21 04:00:00").ok(),
+            })
+        );
+    }
+
+    #[test]
     fn length_delimited() {
         #[derive(Clone, Debug, Deserialize)]
         pub struct PayloadResponse {
